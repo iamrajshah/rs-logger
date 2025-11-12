@@ -1,0 +1,17 @@
+npm run lint:fix && npm run build
+npm run test
+if ! git diff --quiet; then
+echo "======================== PRE COMMIT ERROR ========================="
+echo "❌ Files were modified after lint/format. Please stage the changes."
+git status --short
+echo "======================== PRE COMMIT ERROR ========================="
+exit 1
+fi
+npx npm-check-updates -u
+npm install
+echo "======================== PRE COMMIT SUCCESS ========================="
+echo "✅ Updated package.json and package-lock.json with latest dependencies."
+git add package.json package-lock.json
+echo "======================== PRE COMMIT SUCCESS ========================="
+
+echo "✅ Pre-commit passed."
