@@ -1,0 +1,55 @@
+{
+  "name": "rs-logger",
+  "version": "1.0.1",
+  "description": "Custom logger",
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "prepare": "husky && npm run build",
+    "clean": "rm -rf lib",
+    "version": "echo \"Bumping to $npm_package_version\"",
+    "postversion": "npm run changelog && git add CHANGELOG.md && git commit -m 'chore: update changelog' && git push && git push --tags",
+    "changelog": "auto-changelog --template ./scripts/changelog-template.hbs -p -u --release-summary",
+    "build": "npm run clean && tsc && babel src --out-dir lib --extensions .ts,.js",
+    "update-packages": "ncu --peer --interactive --no-deprecated --format group",
+    "test": "jest silent"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamrajshah/rs-logger.git"
+  },
+  "keywords": [],
+  "author": "Rajesh Shah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamrajshah/rs-logger/issues"
+  },
+  "homepage": "https://github.com/iamrajshah/rs-logger#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@babel/register": "^7.28.3",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "eslint": "^9.39.1",
+    "auto-changelog": "^2.5.0",
+    "babel-jest": "^30.2.0",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "eslint-plugin-babel": "^5.3.1",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "npm-check-updates": "^19.1.2",
+    "prettier": "3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.46.4"
+  },
+  "dependencies": {
+    "winston": "3.18.3"
+  }
+}
