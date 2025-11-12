@@ -1,0 +1,25 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": "node 20",
+        "modules": "commonjs"
+      }
+    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "alias": {
+          "@src": "./src"
+        }
+      }
+    ]
+  ],
+  "sourceMaps": true,
+  "comments": false,
+  "ignore": ["node_modules/**/*"]
+}
