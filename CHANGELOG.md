@@ -7,7 +7,17 @@ Repository: git+https://github.com/iamrajshah/rs-logger
 All notable changes to this project will be documented in this file.  
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.0.1
+## v1.0.2
+
+## v1.0.2 – 2025-11-12
+
+### Commits
+
+- [ [`6755a42`](git+https://github.com/iamrajshah/rs-logger/commit/6755a42cfe1bdf6c8f73e4e0fab3189009bd07fb) ] Added code for logging, error stack is not handled by rajesh.shah <<rajesh.shah@lifeline.com>>
+- [ [`1504a9c`](git+https://github.com/iamrajshah/rs-logger/commit/1504a9cb2d5f2b82dea67295156b21036d373423) ] Readme added by rajesh.shah <<rajesh.shah@lifeline.com>>
+- [ [`63ea4c6`](git+https://github.com/iamrajshah/rs-logger/commit/63ea4c6a5ae1b165818b071a4d041257070107f0) ] Add GitHub Actions workflow for npm package publishing by Rajesh Jitendra Shah <<shahrajesh2113@yahoo.com>>
+- [ [`835ccaa`](git+https://github.com/iamrajshah/rs-logger/commit/835ccaaaca6732dc4b94bd57cb5e18bfb11bad0e) ] chore: update changelog by rajesh.shah <<rajesh.shah@lifeline.com>>
+- [ [`d587dd5`](git+https://github.com/iamrajshah/rs-logger/commit/d587dd5eabc584ad3e12f5dce7d3ca7a1116d9cc) ] Fix environment variable name for npm token by Rajesh Jitendra Shah <<shahrajesh2113@yahoo.com>>
 
 ## v1.0.1 – 2025-11-12
 
