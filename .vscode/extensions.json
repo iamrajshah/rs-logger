@@ -1,5 +1,5 @@
 {
-    "recommendations": [
+  "recommendations": [
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "Orta.vscode-jest",
@@ -7,7 +7,7 @@
     "msjsdiag.debugger-for-chrome",
     "Gruntfuggly.todo-tree",
     "ms-vscode.vscode-typescript-next",
-     "christian-kohler.path-intellisense",
-    "christian-kohler.npm-intellisense",
-    ]
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense"
+  ]
 }

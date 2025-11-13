@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "husky && npm run build",
     "clean": "rm -rf lib",
+    "lint:fix": "prettier --write \"**/*.{js,ts,mjs,cjs,json,css,scss,md}\" && eslint . --fix",
     "version": "echo \"Bumping to $npm_package_version\"",
     "postversion": "npm run changelog && git add CHANGELOG.md && git commit -m 'chore: update changelog' && git push && git push --tags",
     "changelog": "auto-changelog --template ./scripts/changelog-template.hbs -p -u --release-summary",
@@ -48,6 +49,7 @@
     "prettier": "3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "jiti": "^2.6.1",
     "typescript-eslint": "^8.46.4"
   },
   "dependencies": {

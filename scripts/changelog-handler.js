@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const pkg = JSON.parse(
-  fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf8")
+  fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf8"),
 );
 
 module.exports = function (Handlebars) {
@@ -24,7 +24,7 @@ module.exports = function (Handlebars) {
   Handlebars.registerHelper("stringify", function (context) {
     // pretty-print with 2-space indent, and mark as SafeString so HTML shows it
     return new Handlebars.SafeString(
-      `[ [${context.commit.shorthash}](${pkg.repository.url}/commit/${context.commit.hash}) ] - ${context.commit.subject} [BWS-${context.fixes[0].id}](${context.fixes[0].href})`
+      `[ [${context.commit.shorthash}](${pkg.repository.url}/commit/${context.commit.hash}) ] - ${context.commit.subject} [BWS-${context.fixes[0].id}](${context.fixes[0].href})`,
     );
   });
 };
