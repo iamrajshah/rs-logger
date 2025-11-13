@@ -7,7 +7,14 @@ Repository: git+https://github.com/iamrajshah/rs-logger
 All notable changes to this project will be documented in this file.  
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.0.2
+## v1.0.3
+
+## v1.0.3 – 2025-11-13
+
+### Commits
+
+- [ [`cf13535`](git+https://github.com/iamrajshah/rs-logger/commit/cf13535b26416f342c9e644eff1e370af390fe75) ] Added colourizing, error trace & jitti by rajesh.shah <<rajesh.shah@lifeline.com>>
+- [ [`d33ff44`](git+https://github.com/iamrajshah/rs-logger/commit/d33ff44ca277c5abb7c560d5a2e3ebb3ef2e40ac) ] chore: update changelog by rajesh.shah <<rajesh.shah@lifeline.com>>
 
 ## v1.0.2 – 2025-11-12
 
