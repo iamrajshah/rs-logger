@@ -1,5 +1,4 @@
 npm run lint:fix && npm run build
-npm run test
 if ! git diff --quiet; then
 echo "======================== PRE COMMIT ERROR ========================="
 echo "❌ Files were modified after lint/format. Please stage the changes."

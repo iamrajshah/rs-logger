@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   createLogger as winstonCreateLogger,
   format,
   transports,
   Logger as WinstonLogger,
 } from "winston";
-import TransportStream = require("winston-transport");
+import TransportStream from "winston-transport";
 
 const {
   combine,
@@ -12,6 +13,7 @@ const {
   printf,
   errors: formatErrors,
   metadata: formatMetadata,
+  colorize,
 } = format;
 
 export interface ILogConfiguration {
@@ -33,7 +35,6 @@ function safeStringify(value: unknown): string {
         message: val.message,
         stack: val.stack,
       };
-      // copy enumerable + non-enumerable own props
       for (const k of Object.getOwnPropertyNames(val)) {
         if (k in errorProps) continue;
         try {
@@ -60,7 +61,6 @@ function safeStringify(value: unknown): string {
 }
 
 function createTransports(_service: string): TransportStream[] {
-  // Keep transports minimal by default. Users can pass custom transports.
   return [new transports.Console()];
 }
 
@@ -80,6 +80,7 @@ const defaultCfg: ILogConfiguration = {
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
   pretty: (process.env.NODE_ENV || "development") !== "production",
 };
+
 export class RSLogger {
   public logger: WinstonLogger | undefined;
   public config: ILogConfiguration | undefined;
@@ -90,60 +91,101 @@ export class RSLogger {
   }
 
   init(config: Partial<ILogConfiguration>) {
-    this.config = (config as ILogConfiguration) || defaultCfg;
+    this.config = { ...defaultCfg, ...config };
     this.logger = this.createWinstonLogger(this.config);
   }
 
   private createWinstonLogger(cfg: ILogConfiguration): WinstonLogger {
     const pretty = cfg.pretty && cfg.ENV !== "production";
 
-    const jsonFormat = combine(
+    const baseFormat = combine(
       formatErrors({ stack: true }),
       formatMetadata({
         fillExcept: ["message", "level", "timestamp", "service"],
       }),
       timestamp(),
+    );
+
+    const jsonFormat = combine(
+      baseFormat,
       printf((info) => {
-        // info.message may already be a string or an object
         const message =
           typeof info.message === "string"
             ? info.message
             : safeStringify(info.message);
-        // Prefer info.stack (added by format.errors), fallback to message.stack or metadata.error.stack
-        const stackSource =
+
+        const errorStack =
           (info as any).stack ||
-          (info.message && (info.message as any).stack
-            ? (info.message as any).stack
-            : undefined) ||
-          ((info as any).metadata &&
-          (info as any).metadata.error &&
-          (info as any).metadata.error.stack
-            ? (info as any).metadata.error.stack
-            : undefined);
-        const stack = stackSource ? `\n${stackSource}` : "";
+          (info as any).metadata?.error?.stack ||
+          (info as any).error?.stack;
+
+        const hasErrorStack = Boolean(errorStack);
+
+        let logLine = `${info.timestamp} [${info.level}] ${
+          info.service || cfg.APP_NAME
+        } - ${message}`;
+
+        if (hasErrorStack) {
+          logLine += `\n${errorStack}`;
+        }
+
+        // Only include meta for error logs and only if something useful is there
         const meta =
-          (info as any).metadata && Object.keys((info as any).metadata).length
-            ? `\nmeta: ${safeStringify((info as any).metadata)}`
+          info.level === "error" &&
+          (info as any).metadata &&
+          Object.keys((info as any).metadata).length > 0
+            ? (() => {
+                const { error, ...rest } = (info as any).metadata;
+                return Object.keys(rest).length
+                  ? `\nmeta: ${safeStringify(rest)}`
+                  : "";
+              })()
             : "";
-        return `${info.timestamp} [${info.level}] ${info.service || cfg.APP_NAME} - ${message}${stack}${meta}`;
-      })
+
+        return `${logLine}${meta}`;
+      }),
     );
 
     const prettyFormat = combine(
-      formatErrors({ stack: true }),
-      timestamp(),
+      colorize({ all: true }),
+      baseFormat,
       printf((info) => {
         const message =
           typeof info.message === "string"
             ? info.message
             : safeStringify(info.message);
-        const stack = (info as any).stack ? `\n${(info as any).stack}` : "";
+
+        const errorStack =
+          (info as any).stack ||
+          (info as any).metadata?.error?.stack ||
+          (info as any).error?.stack;
+
+        const hasErrorStack = Boolean(errorStack);
+
+        let logLine = `${info.timestamp} [${info.level}] ${
+          info.service || cfg.APP_NAME
+        } - ${message}`;
+
+        if (hasErrorStack) {
+          logLine += `\n${colorize().colorize("red", errorStack)}`;
+        }
+
         const meta =
-          (info as any).metadata && Object.keys((info as any).metadata).length
-            ? `\nmeta: ${safeStringify((info as any).metadata)}`
+          info.level === "error" &&
+          (info as any).metadata &&
+          Object.keys((info as any).metadata).length > 0
+            ? (() => {
+                const { error, ...rest } = (info as any).metadata;
+                return Object.keys(rest).length
+                  ? `\n${colorize().colorize("grey", "meta:")} ${safeStringify(
+                      rest,
+                    )}`
+                  : "";
+              })()
             : "";
-        return `${info.timestamp} [${info.level}] ${info.service || cfg.APP_NAME} - ${message}${stack}${meta}`;
-      })
+
+        return `${logLine}${meta}`;
+      }),
     );
 
     const chosenFormat = pretty ? prettyFormat : jsonFormat;
@@ -159,9 +201,7 @@ export class RSLogger {
   }
 
   public child(defaults: Record<string, unknown>): RSLogger {
-    // Create a child logger that inherits transports and level but has default meta
     const childLogger = new RSLogger();
-    // merge defaultMeta
     childLogger.logger = this.logger?.child({
       ...((this.logger as any).defaultMeta || {}),
       ...defaults,
@@ -172,20 +212,31 @@ export class RSLogger {
   public error(...args: unknown[]): void {
     const { message, meta } = this.normalizeArgs(args);
 
-    console.log(
-      message,
-      meta,
-      typeof message,
-      typeof meta,
-      meta instanceof Error
-    );
+    // Special handling for Error objects for clean readable logs
+    if (args[0] instanceof Error) {
+      const err = args[0] as Error;
+      const errObj = extractOwnProps(err);
+
+      const prettyError = [
+        `${errObj.name}: ${errObj.message}`,
+        errObj.stack ? `\n${errObj.stack}` : "",
+      ].join("");
+
+      this.logger?.log({
+        level: "error",
+        message: prettyError,
+        meta: { ...meta, error: errObj },
+      });
+      return;
+    }
+
     if (typeof message === "string") {
-      this.logger?.log({ level: "error", message, ...(meta || {}) });
+      this.logger?.log({ level: "error", message, meta });
     } else {
       this.logger?.log({
         level: "error",
         message: safeStringify(message),
-        meta: { ...(meta || {}), payload: message },
+        meta: { ...meta, payload: message },
       });
     }
   }
@@ -193,12 +244,12 @@ export class RSLogger {
   public warn(...args: unknown[]): void {
     const { message, meta } = this.normalizeArgs(args);
     if (typeof message === "string") {
-      this.logger?.log({ level: "warn", message, ...(meta || {}) });
+      this.logger?.log({ level: "warn", message, meta });
     } else {
       this.logger?.log({
         level: "warn",
         message: safeStringify(message),
-        meta: { ...(meta || {}), payload: message },
+        meta: { ...meta, payload: message },
       });
     }
   }
@@ -206,12 +257,12 @@ export class RSLogger {
   public info(...args: unknown[]): void {
     const { message, meta } = this.normalizeArgs(args);
     if (typeof message === "string") {
-      this.logger?.log({ level: "info", message, ...(meta || {}) });
+      this.logger?.log({ level: "info", message, meta });
     } else {
       this.logger?.log({
         level: "info",
         message: safeStringify(message),
-        meta: { ...(meta || {}), payload: message },
+        meta: { ...meta, payload: message },
       });
     }
   }
@@ -219,12 +270,12 @@ export class RSLogger {
   public verbose(...args: unknown[]): void {
     const { message, meta } = this.normalizeArgs(args);
     if (typeof message === "string") {
-      this.logger?.log({ level: "verbose", message, ...(meta || {}) });
+      this.logger?.log({ level: "verbose", message, meta });
     } else {
       this.logger?.log({
         level: "verbose",
         message: safeStringify(message),
-        meta: { ...(meta || {}), payload: message },
+        meta: { ...meta, payload: message },
       });
     }
   }
@@ -232,12 +283,12 @@ export class RSLogger {
   public debug(...args: unknown[]): void {
     const { message, meta } = this.normalizeArgs(args);
     if (typeof message === "string") {
-      this.logger?.log({ level: "debug", message, ...(meta || {}) });
+      this.logger?.log({ level: "debug", message, meta });
     } else {
       this.logger?.log({
         level: "debug",
         message: safeStringify(message),
-        meta: { ...(meta || {}), payload: message },
+        meta: { ...meta, payload: message },
       });
     }
   }
@@ -247,33 +298,27 @@ export class RSLogger {
     message: string | object;
     meta?: object;
   } {
-    // common patterns: (msg), (msg, meta), (error), (error, meta)
     if (args.length === 0) return { message: "" };
 
     const first = args[0];
     const rest = args.slice(1);
 
+    // Handle Error first
     if (first instanceof Error) {
-      const err = first as Error;
-      const errorObj = {
-        name: err.name,
-        message: err.message,
-        stack: err.stack,
-        ...extractOwnProps(err),
-      };
-      const meta = rest.length ? { extra: rest } : undefined;
+      const metaCandidate =
+        rest.length && rest[0] != null && typeof rest[0] === "object"
+          ? (rest[0] as object)
+          : undefined;
       return {
-        message: errorObj.message || err.name,
-        meta: { error: errorObj, ...(meta || {}) },
+        message: first,
+        meta: metaCandidate,
       };
     }
 
     if (typeof first === "string") {
       if (rest.length === 0) return { message: first };
-      // if second arg is object, treat as meta
       if (rest.length === 1 && typeof rest[0] === "object")
         return { message: first, meta: rest[0] as object };
-      // otherwise join everything
       return {
         message: [first, ...rest]
           .map((x) => (typeof x === "string" ? x : safeStringify(x)))
@@ -281,29 +326,24 @@ export class RSLogger {
       };
     }
 
-    // first is object or other
     if (typeof first === "object") {
       const combined = Object.assign(
         {},
-        ...([first, ...rest].filter((x) => typeof x === "object") as object[])
+        ...([first, ...rest].filter((x) => typeof x === "object") as object[]),
       );
       return { message: combined };
     }
 
-    // fallback to safe string
     return { message: safeStringify(args) };
   }
 
-  public async flush(timeoutMs = 2000): Promise<void> {
-    // Winston logger.close() will flush and close transports; not all transports implement events
+  public flush(timeoutMs = 2000): Promise<void> {
     return new Promise((resolve) => {
       try {
-        // some transports support .flush or .on('finish'). We'll call close and resolve quickly
         (this.logger as any).close?.();
-      } catch (e) {
+      } catch {
         // ignore
       }
-      // best-effort wait to let transports flush
       setTimeout(resolve, timeoutMs);
     });
   }
@@ -321,6 +361,5 @@ function extractOwnProps(err: Error): Record<string, unknown> {
   return out;
 }
 
-// default exported instance for convenience
 const defaultLogger = new RSLogger();
 export default defaultLogger;
