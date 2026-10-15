@@ -19,5 +19,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["www", "node_modules", "**/*.spec.ts"]
+  "exclude": ["www", "node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }

@@ -1,29 +1,57 @@
 {
   "name": "rs-logger",
-  "version": "1.0.3",
-  "description": "Custom logger",
-  "main": "lib/index.js",
+  "version": "1.1.0",
+  "description": "TypeScript-first Winston wrapper with structured metadata, safe Error serialization, child loggers, and graceful shutdown.",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "require": "./lib/index.js",
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
-    "prepare": "husky && npm run build",
+    "build": "npm run clean && tsc && babel src --out-dir lib --extensions .ts,.js --ignore '**/*.test.ts'",
     "clean": "rm -rf lib",
-    "lint:fix": "prettier --write \"**/*.{js,ts,mjs,cjs,json,css,scss,md}\" && eslint . --fix",
-    "version": "echo \"Bumping to $npm_package_version\"",
-    "postversion": "npm run changelog && git add CHANGELOG.md && git commit -m 'chore: update changelog' && git push && git push --tags",
-    "changelog": "auto-changelog --template ./scripts/changelog-template.hbs -p -u --release-summary",
-    "build": "npm run clean && tsc && babel src --out-dir lib --extensions .ts,.js",
-    "update-packages": "ncu --peer --interactive --no-deprecated --format group",
-    "test": "jest silent"
+    "format": "prettier --write \"**/*.{js,ts,mjs,cjs,json,css,scss,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,mjs,cjs,json,css,scss,md,yml,yaml}\"",
+    "lint": "eslint .",
+    "prepare": "npm run build",
+    "prepack": "npm run verify",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
+    "verify": "npm run format:check && npm run lint && npm test && npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iamrajshah/rs-logger.git"
   },
-  "keywords": [],
-  "author": "Rajesh Shah",
-  "license": "ISC",
+  "keywords": [
+    "logger",
+    "logging",
+    "typescript",
+    "winston",
+    "structured-logging",
+    "error-handling",
+    "nodejs"
+  ],
+  "author": {
+    "name": "Rajesh Jitendra Shah",
+    "email": "shahrajesh2113@yahoo.com",
+    "url": "https://github.com/iamrajshah"
+  },
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/iamrajshah/rs-logger/issues"
   },
@@ -35,21 +63,17 @@
     "@babel/preset-typescript": "^7.28.5",
     "@babel/register": "^7.28.3",
     "@types/node": "^24.10.1",
-    "@types/winston": "^2.4.4",
-    "auto-changelog": "^2.5.0",
     "babel-jest": "^30.2.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "^9.39.1",
     "eslint-plugin-babel": "^5.3.1",
     "globals": "^16.5.0",
-    "husky": "^9.1.7",
     "jest": "^30.2.0",
-    "npm-check-updates": "^19.1.2",
+    "jiti": "^2.6.1",
     "prettier": "3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "jiti": "^2.6.1",
     "typescript-eslint": "^8.46.4"
   },
   "dependencies": {
