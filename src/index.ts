@@ -350,7 +350,11 @@ export class RSLogger {
 }
 
 function extractOwnProps(err: Error): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
+  const out: Record<string, unknown> = {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+  };
   for (const k of Object.getOwnPropertyNames(err)) {
     try {
       (out as any)[k] = (err as any)[k];
